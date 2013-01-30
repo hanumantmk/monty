@@ -4,7 +4,7 @@ AM_CXXFLAGS= \
 	-std=c++0x \
 	-ggdb3
 
-bin_PROGRAMS = monty
+bin_PROGRAMS = monty test_monty
 
 monty_SOURCES=\
 	monty.cpp\
@@ -14,3 +14,11 @@ monty_SOURCES=\
 
 AM_LDFLAGS= \
 	-ljson
+
+test_monty_LDFLAGS=\
+	-lgtest_main -lpthread
+
+test_monty_SOURCES=\
+	test_monty.cpp\
+	object.cpp\
+	ast.cpp
