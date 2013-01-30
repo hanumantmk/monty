@@ -91,6 +91,7 @@ public:
         SLE,
         SGT,
         SGE,
+        NUM_ITEMS,
     };
 
 private:
@@ -135,6 +136,8 @@ public:
                 return lval.compare(rval) > 0;
             case SGE:
                 return lval.compare(rval) >= 0;
+            default:
+                return false;
         }
         assert(0);
         return false;
@@ -142,7 +145,7 @@ public:
 
     virtual void print(std::ostream & out) const
     {
-        out << "Binary<" << BinaryType::names[type] << ">(" << left << ", " << right << ")";
+        out << "Binary<" << BinaryType::names[type] << ">(" << *left << ", " << *right << ")";
     }
 };
 
@@ -171,7 +174,7 @@ public:
 
     virtual void print(std::ostream & out) const
     {
-        out << "Conditional(" << condition << ", " << ifTrue << ", " << ifFalse << ")";
+        out << "Conditional(" << *condition << ", " << *ifTrue << ", " << *ifFalse << ")";
     }
 };
 
@@ -184,6 +187,7 @@ public:
     enum Type {
         AND,
         OR,
+        NUM_ITEMS,
     };
 
 private:
@@ -233,11 +237,11 @@ public:
 
 class Production: public Statement {
     std::string service;
-    std::vector<Arg> path;
-    std::vector<std::pair<std::string, Arg> > params;
+    std::vector<Arg *> path;
+    std::vector<std::pair<std::string, Arg *> > params;
 
 public:
-    Production(const std::string & service, const std::vector<Arg> & path, const std::vector<std::pair<std::string, Arg> > & params) : service(service), path(path), params(params) {}
+    Production(const std::string & service, const std::vector<Arg *> & path, const std::vector<std::pair<std::string, Arg *> > & params) : service(service), path(path), params(params) {}
 
     virtual std::string exec(const Message & msg)
     {
@@ -245,18 +249,22 @@ public:
 
         out << service;
 
-        for (std::vector<Arg>::iterator it = path.begin(); it != path.end(); it++) {
-            out << "/" << it->getValue(msg);
+        if (path.size()) {
+            for (std::vector<Arg *>::iterator it = path.begin(); it != path.end(); it++) {
+                out << "/" << (**it).getValue(msg);
+            }
         }
 
-        out << "?";
+        if (params.size()) {
+            out << "?";
 
-        for (std::vector<std::pair<std::string, Arg> >::iterator it = params.begin(); it != params.end(); it++) {
-            // TODO: add url encoding
-            
-            out << it->first << "=" << it->second.getValue(msg);
-            if (it + 1 != params.end()) {
-                out << "&";
+            for (std::vector<std::pair<std::string, Arg *> >::iterator it = params.begin(); it != params.end(); it++) {
+                // TODO: add url encoding
+                
+                out << it->first << "=" << it->second->getValue(msg);
+                if (it + 1 != params.end()) {
+                    out << "&";
+                }
             }
         }
 
@@ -267,8 +275,8 @@ public:
     {
         out << "Production(" << service << ", PATH(";
 
-        for (std::vector<Arg>::const_iterator it = path.begin(); it != path.end(); it++) {
-            out << *it;
+        for (std::vector<Arg *>::const_iterator it = path.begin(); it != path.end(); it++) {
+            out << **it;
 
             if (it + 1 != path.end()) {
                 out << ", ";
@@ -277,8 +285,8 @@ public:
 
         out << "), PARAMS(";
 
-        for (std::vector<std::pair<std::string, Arg> >::const_iterator it = params.begin(); it != params.end(); it++) {
-            out << it->first << "=" << it->second;
+        for (std::vector<std::pair<std::string, Arg *> >::const_iterator it = params.begin(); it != params.end(); it++) {
+            out << it->first << "=" << *(it->second);
 
             if (it + 1 != params.end()) {
                 out << ", ";

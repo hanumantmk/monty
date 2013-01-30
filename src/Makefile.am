@@ -10,6 +10,7 @@ monty_SOURCES=\
 	monty.cpp\
 	object.cpp\
 	message.cpp\
+	rule.cpp\
 	ast.cpp
 
 AM_LDFLAGS= \
@@ -22,4 +23,5 @@ test_monty_SOURCES=\
 	test_monty.cpp\
 	object.cpp\
 	message.cpp\
+	rule.cpp\
 	ast.cpp

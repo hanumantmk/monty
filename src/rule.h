@@ -1,17 +1,21 @@
 #ifndef MONTY_RULE_H
 #define MONTY_RULE_H
 
+#include <string>
+
 #include "ast.h"
+#include "object.h"
 
 namespace Monty {
 
-class Rule {
-    Statement * statement;
+class Rule: public Object {
+    AST::Statement * statement;
 
-Public:
+public:
     Rule(const std::string & json);
-    ostream & operator<<(ostream & out, const Rule & x);
-}
+    virtual void print(std::ostream & stream) const;
+    std::string exec(const Message & msg);
+};
 
 }
 
