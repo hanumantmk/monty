@@ -16,9 +16,10 @@ AM_LDFLAGS= \
 	-ljson
 
 test_monty_LDFLAGS=\
-	-lgtest_main -lpthread
+	-lgtest_main -lpthread -ljson
 
 test_monty_SOURCES=\
 	test_monty.cpp\
 	object.cpp\
+	message.cpp\
 	ast.cpp

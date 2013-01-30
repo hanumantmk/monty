@@ -8,6 +8,8 @@
 #include "message.h"
 #include "object.h"
 
+#include <assert.h>
+
 namespace Monty {
 namespace AST {
 
@@ -75,6 +77,7 @@ namespace BinaryType {
 }
 
 class Binary: public Expression {
+public:
     enum Type {
         EQ,
         NE,
@@ -90,6 +93,7 @@ class Binary: public Expression {
         SGE,
     };
 
+private:
     Binary::Type type;
     Arg * left;
     Arg * right;
@@ -132,6 +136,8 @@ public:
             case SGE:
                 return lval.compare(rval) >= 0;
         }
+        assert(0);
+        return false;
     }
 
     virtual void print(std::ostream & out) const
@@ -174,11 +180,13 @@ namespace LogicalType {
 }
 
 class Logical: public Expression {
+public:
     enum Type {
         AND,
         OR,
     };
 
+private:
     Logical::Type type;
     std::vector<Expression *> clauses;
 
