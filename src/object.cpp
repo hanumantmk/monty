@@ -6,3 +6,12 @@ std::ostream & operator<<(std::ostream & out, const Monty::Object & obj) {
     return out;
 }
 
+std::ostream & operator<<(std::ostream & out, const Monty::Object * obj) {
+    if (obj) {
+        obj->print(out);
+    } else {
+        out << "NULL";
+    }
+
+    return out;
+}

@@ -13,7 +13,19 @@
 namespace Monty {
 namespace AST {
 
-class Statement: public Object {
+class Base: public Object {
+
+protected:
+    bool complete;
+
+public:
+    bool isComplete()
+    {
+        return complete;
+    }
+};
+
+class Statement: public Base {
 
 public:
     virtual ~Statement() {}
@@ -21,7 +33,7 @@ public:
     virtual std::string exec(const Message & msg) {return std::string("");}
 };
 
-class Arg: public Object {
+class Arg: public Base {
 
 public:
     virtual ~Arg() {}
@@ -33,7 +45,10 @@ class Value: public Arg {
 
 public:
     std::string value;
-    Value(const std::string & s) : value(s) {};
+    Value(const std::string & s) : value(s)
+    {
+        complete = true;
+    };
 
     virtual std::string getValue(const Message & msg)
     {
@@ -50,7 +65,10 @@ class Lookup: public Arg {
     std::string key;
 
 public:
-    Lookup(const std::string & s) : key(s) {}
+    Lookup(const std::string & s) : key(s)
+    {
+        complete = true;
+    }
 
     virtual std::string getValue(const Message & msg)
     {
@@ -64,7 +82,7 @@ public:
 
 };
 
-class Expression: public Object {
+class Expression: public Base {
 
 public:
     virtual ~Expression() {};
@@ -100,14 +118,20 @@ private:
     Arg * right;
 
 public:
-    Binary(Binary::Type t, Arg * left, Arg * right) : type(t), left(left), right(right) {}
+    Binary(Binary::Type t, Arg * left, Arg * right) : type(t), left(left), right(right)
+    {
+        complete = left && right;
+    }
+
     ~Binary() {
-        delete left;
-        delete right;
+        if (left) delete left;
+        if (right) delete right;
     }
     
     virtual bool eval(const Message & msg)
     {
+        if (! isComplete()) return false;
+
         std::string lval = left->getValue(msg);
         std::string rval = right->getValue(msg);
 
@@ -145,7 +169,7 @@ public:
 
     virtual void print(std::ostream & out) const
     {
-        out << "Binary<" << BinaryType::names[type] << ">(" << *left << ", " << *right << ")";
+        out << "Binary<" << BinaryType::names[type] << ">(" << left << ", " << right << ")";
     }
 };
 
@@ -155,16 +179,22 @@ class Conditional : public Statement {
     Statement * ifFalse;
 
 public:
-    Conditional(Expression * e, Statement * ifTrue, Statement * ifFalse) : condition(e), ifTrue(ifTrue), ifFalse(ifFalse) {}
+    Conditional(Expression * e, Statement * ifTrue, Statement * ifFalse) : condition(e), ifTrue(ifTrue), ifFalse(ifFalse)
+    {
+        complete = condition && ifTrue && ifFalse;
+    }
+
     ~Conditional()
     {
-        delete(condition);
-        delete(ifTrue);
-        delete(ifFalse);
+        if (condition) delete(condition);
+        if (ifTrue) delete(ifTrue);
+        if (ifFalse) delete(ifFalse);
     }
 
     virtual std::string exec(const Message & msg)
     {
+        if (! isComplete()) return std::string("");
+
         if (condition->eval(msg)) {
             return ifTrue->exec(msg);
         } else {
@@ -174,7 +204,7 @@ public:
 
     virtual void print(std::ostream & out) const
     {
-        out << "Conditional(" << *condition << ", " << *ifTrue << ", " << *ifFalse << ")";
+        out << "Conditional(" << condition << ", " << ifTrue << ", " << ifFalse << ")";
     }
 };
 
@@ -195,7 +225,11 @@ private:
     std::vector<Expression *> clauses;
 
 public:
-    Logical(Logical::Type t, std::vector<Expression *> & c) : type(t), clauses(c) {}
+    Logical(Logical::Type t, std::vector<Expression *> & c) : type(t), clauses(c)
+    {
+        complete = true;
+    }
+
     ~Logical()
     {
         for (std::vector<Expression *>::iterator it = clauses.begin(); it != clauses.end(); it++) {
@@ -241,7 +275,10 @@ class Production: public Statement {
     std::vector<std::pair<std::string, Arg *> > params;
 
 public:
-    Production(const std::string & service, const std::vector<Arg *> & path, const std::vector<std::pair<std::string, Arg *> > & params) : service(service), path(path), params(params) {}
+    Production(const std::string & service, const std::vector<Arg *> & path, const std::vector<std::pair<std::string, Arg *> > & params) : service(service), path(path), params(params)
+    {
+        complete = true;
+    }
 
     virtual std::string exec(const Message & msg)
     {

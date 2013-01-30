@@ -13,6 +13,7 @@ public:
 
 };
 
+std::ostream & operator<<(std::ostream & out, const Monty::Object * obj);
 std::ostream & operator<<(std::ostream & out, const Monty::Object & obj);
 
 #endif

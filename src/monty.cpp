@@ -66,6 +66,24 @@ int main(int argc, char ** argv)
 
     cout << rule.exec(msg) << endl;
     cout << rule.exec(msg2) << endl;
+
+    string sbrokenrule(
+        "[\"conditional\", {"\
+            "\"condition\" : [\"binary\", {"\
+                "\"type\" : \"EQ\","\
+                "\"left\" : [\"value\", {"\
+                    "\"value\" : 10"\
+                "}],"\
+                "\"right\" : [\"lookup\", {"\
+                    "\"key\" : \"foo\""\
+                "}]"\
+            "}]"\
+        "}]"\
+    );
+
+    Rule brokenrule(sbrokenrule);
+
+    cout << brokenrule << endl;
                     
     return 0;
 }

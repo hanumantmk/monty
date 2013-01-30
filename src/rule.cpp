@@ -30,21 +30,45 @@ AST::Statement * parseJson(const std::string & json)
 {
     json_object * jobj = json_tokener_parse(json.c_str());
 
-    return parseStatement(jobj);
+    AST::Statement * statement = parseStatement(jobj);
+
+    json_object_put(jobj);
+
+    return statement;
+}
+
+bool parseObject(json_object * obj, json_object ** ele, const char ** type)
+{
+    if (! obj) return false;
+
+    if (! json_object_is_type(obj, json_type_array)) return false;
+
+    if (json_object_array_length(obj) != 2) return false;
+
+    json_object * jtype = json_object_array_get_idx(obj, 0);
+
+    if (! jtype) return false;
+
+    if (! json_object_is_type(jtype, json_type_string)) return false;
+
+    *type = json_object_get_string(jtype);
+
+    *ele = json_object_array_get_idx(obj, 1);
+
+    return true;
 }
 
 AST::Statement * parseStatement(json_object * ctx)
 {
-    json_object * jtype = json_object_array_get_idx(ctx, 0);
+    const char * type;
+    json_object * obj;
 
-    if (! jtype) return NULL;
-
-    const char * type = json_object_get_string(jtype);
+    if (! parseObject(ctx, &obj, &type)) return NULL;
 
     if (strcmp(type, "conditional") == 0) {
-        return parseConditional(json_object_array_get_idx(ctx, 1));
+        return parseConditional(obj);
     } else if (strcmp(type, "production") == 0) {
-        return parseProduction(json_object_array_get_idx(ctx, 1));
+        return parseProduction(obj);
     } else {
         return NULL;
     }
@@ -52,16 +76,15 @@ AST::Statement * parseStatement(json_object * ctx)
 
 AST::Expression * parseExpression(json_object * ctx)
 {
-    json_object * jtype = json_object_array_get_idx(ctx, 0);
+    const char * type;
+    json_object * obj;
 
-    if (! jtype) return NULL;
-
-    const char * type = json_object_get_string(jtype);
+    if (! parseObject(ctx, &obj, &type)) return NULL;
 
     if (strcmp(type, "binary") == 0) {
-        return parseBinary(json_object_array_get_idx(ctx, 1));
+        return parseBinary(obj);
     } else if (strcmp(type, "logical") == 0) {
-        return parseLogical(json_object_array_get_idx(ctx, 1));
+        return parseLogical(obj);
     } else {
         return NULL;
     }
@@ -69,16 +92,15 @@ AST::Expression * parseExpression(json_object * ctx)
 
 AST::Arg * parseArg(json_object * ctx)
 {
-    json_object * jtype = json_object_array_get_idx(ctx, 0);
+    const char * type;
+    json_object * obj;
 
-    if (! jtype) return NULL;
-
-    const char * type = json_object_get_string(jtype);
+    if (! parseObject(ctx, &obj, &type)) return NULL;
 
     if (strcmp(type, "value") == 0) {
-        return parseValue(json_object_array_get_idx(ctx, 1));
+        return parseValue(obj);
     } else if (strcmp(type, "lookup") == 0) {
-        return parseLookup(json_object_array_get_idx(ctx, 1));
+        return parseLookup(obj);
     } else {
         return NULL;
     }
@@ -140,14 +162,17 @@ AST::Statement * parseConditional(json_object * ctx)
 AST::Statement * parseProduction(json_object * ctx)
 {
     json_object * jservice = json_object_object_get(ctx, "service");
-
-    if (! jservice) return NULL;
-
-    std::string service(json_object_get_string(jservice));
-
+    json_object * jparams = json_object_object_get(ctx, "params");
     json_object * jpath = json_object_object_get(ctx, "path");
 
+    if (! jservice) return NULL;
+    if (! jparams) return NULL;
+    if (! jpath) return NULL;
+
+    if (! json_object_is_type(jparams, json_type_array)) return NULL;
     if (! json_object_is_type(jpath, json_type_array)) return NULL;
+
+    std::string service(json_object_get_string(jservice));
 
     std::vector<AST::Arg *> path;
 
@@ -155,17 +180,13 @@ AST::Statement * parseProduction(json_object * ctx)
         path.push_back(parseArg(json_object_array_get_idx(jpath, i)));
     }
 
-    json_object * jparams = json_object_object_get(ctx, "params");
-
-    if (! json_object_is_type(jparams, json_type_array)) return NULL;
-
     std::vector<std::pair<std::string, AST::Arg *> > params;
 
     for (int i = 0; i < json_object_array_length(jparams); i++) {
         json_object * jitem = json_object_array_get_idx(jparams, i);
 
-        if (! jitem) return NULL;
-        if (! json_object_is_type(jitem, json_type_array)) return NULL;
+        if (! jitem) continue;
+        if (! json_object_is_type(jitem, json_type_array)) continue;
 
         json_object * jkey = json_object_array_get_idx(jitem, 0);
         json_object * jval = json_object_array_get_idx(jitem, 1);
