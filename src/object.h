@@ -9,8 +9,6 @@ class Object {
 
 public:
     virtual void print(std::ostream & stream) const {};
-
-//    friend std::ostream & operator<<(std::ostream & out, const Object & obj);
 };
 
 };

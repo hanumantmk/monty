@@ -9,4 +9,8 @@ bin_PROGRAMS = monty
 monty_SOURCES=\
 	monty.cpp\
 	object.cpp\
+	message.cpp\
 	ast.cpp
+
+AM_LDFLAGS= \
+	-ljson
