@@ -1,5 +1,5 @@
 #include "rule.h"
-#include "string.h"
+#include <cstring>
 #include "ast.h"
 #include <json/json.h>
 
@@ -65,9 +65,9 @@ AST::Statement * parseStatement(json_object * ctx)
 
     if (! parseObject(ctx, &obj, &type)) return NULL;
 
-    if (strcmp(type, "conditional") == 0) {
+    if (std::strcmp(type, "conditional") == 0) {
         return parseConditional(obj);
-    } else if (strcmp(type, "production") == 0) {
+    } else if (std::strcmp(type, "production") == 0) {
         return parseProduction(obj);
     } else {
         return NULL;
@@ -81,9 +81,9 @@ AST::Expression * parseExpression(json_object * ctx)
 
     if (! parseObject(ctx, &obj, &type)) return NULL;
 
-    if (strcmp(type, "binary") == 0) {
+    if (std::strcmp(type, "binary") == 0) {
         return parseBinary(obj);
-    } else if (strcmp(type, "logical") == 0) {
+    } else if (std::strcmp(type, "logical") == 0) {
         return parseLogical(obj);
     } else {
         return NULL;
@@ -97,9 +97,9 @@ AST::Arg * parseArg(json_object * ctx)
 
     if (! parseObject(ctx, &obj, &type)) return NULL;
 
-    if (strcmp(type, "value") == 0) {
+    if (std::strcmp(type, "value") == 0) {
         return parseValue(obj);
-    } else if (strcmp(type, "lookup") == 0) {
+    } else if (std::strcmp(type, "lookup") == 0) {
         return parseLookup(obj);
     } else {
         return NULL;

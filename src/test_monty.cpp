@@ -34,8 +34,11 @@ TEST(Binary,SEQ) {
 TEST(Binary,EQ) {
     Message m("{}");
 
-    Binary b1(Binary::Type::EQ, new Value("foo"), new Value("bar") );
+    Binary b1(Binary::Type::EQ, new Value("foo"), new Value("4bar") );
     EXPECT_FALSE(b1.eval(m));
+
+    Binary b2(Binary::Type::EQ, new Value("4"), new Value("4") );
+    EXPECT_TRUE(b2.eval(m));
 }
 
 }

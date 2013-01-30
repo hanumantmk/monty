@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <cstdlib>
 
 #include "message.h"
 #include "object.h"
@@ -132,34 +133,36 @@ public:
     {
         if (! isComplete()) return false;
 
-        std::string lval = left->getValue(msg);
-        std::string rval = right->getValue(msg);
+        std::string lstring = left->getValue(msg);
+        std::string rstring = right->getValue(msg);
+        const char * lchar = lstring.c_str();
+        const char * rchar = rstring.c_str();
 
         switch (type) {
             case EQ:
-                return std::stoi(lval) == std::stoi(rval);
+                return std::atoi(lchar) == std::atoi(rchar);
             case NE:
-                return std::stoi(lval) != std::stoi(rval);
+                return std::atoi(lchar) != std::atoi(rchar);
             case LT:
-                return std::stoi(lval) < std::stoi(rval);
+                return std::atoi(lchar) < std::atoi(rchar);
             case LE:
-                return std::stoi(lval) <= std::stoi(rval);
+                return std::atoi(lchar) <= std::atoi(rchar);
             case GT:
-                return std::stoi(lval) > std::stoi(rval);
+                return std::atoi(lchar) > std::atoi(rchar);
             case GE:
-                return std::stoi(lval) >= std::stoi(rval);
+                return std::atoi(lchar) >= std::atoi(rchar);
             case SEQ:
-                return lval.compare(rval) == 0;
+                return lstring.compare(rstring) == 0;
             case SNE:
-                return lval.compare(rval) != 0;
+                return lstring.compare(rstring) != 0;
             case SLT:
-                return lval.compare(rval) < 0;
+                return lstring.compare(rstring) < 0;
             case SLE:
-                return lval.compare(rval) <= 0;
+                return lstring.compare(rstring) <= 0;
             case SGT:
-                return lval.compare(rval) > 0;
+                return lstring.compare(rstring) > 0;
             case SGE:
-                return lval.compare(rval) >= 0;
+                return lstring.compare(rstring) >= 0;
             default:
                 return false;
         }
