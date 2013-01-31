@@ -5,6 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <cstdlib>
+#include <memory>
 
 #include "message.h"
 #include "object.h"
@@ -15,15 +16,6 @@ namespace Monty {
 namespace AST {
 
 class Base: public Object {
-
-protected:
-    bool complete;
-
-public:
-    bool isComplete()
-    {
-        return complete;
-    }
 };
 
 class Statement: public Base {
@@ -46,10 +38,7 @@ class Value: public Arg {
 
 public:
     std::string value;
-    Value(const std::string & s) : value(s)
-    {
-        complete = true;
-    };
+    Value(const std::string & s) : value(s) {}
 
     virtual std::string getValue(const Message & msg)
     {
@@ -66,10 +55,7 @@ class Lookup: public Arg {
     std::string key;
 
 public:
-    Lookup(const std::string & s) : key(s)
-    {
-        complete = true;
-    }
+    Lookup(const std::string & s) : key(s) { }
 
     virtual std::string getValue(const Message & msg)
     {
@@ -115,24 +101,14 @@ public:
 
 private:
     Binary::Type type;
-    Arg * left;
-    Arg * right;
+    std::shared_ptr<Arg> left;
+    std::shared_ptr<Arg> right;
 
 public:
-    Binary(Binary::Type t, Arg * left, Arg * right) : type(t), left(left), right(right)
-    {
-        complete = left && right;
-    }
-
-    ~Binary() {
-        if (left) delete left;
-        if (right) delete right;
-    }
+    Binary(Binary::Type t, std::shared_ptr<Arg> left, std::shared_ptr<Arg> right) : type(t), left(left), right(right) { }
     
     virtual bool eval(const Message & msg)
     {
-        if (! isComplete()) return false;
-
         std::string lstring = left->getValue(msg);
         std::string rstring = right->getValue(msg);
         const char * lchar = lstring.c_str();
@@ -172,32 +148,20 @@ public:
 
     virtual void print(std::ostream & out) const
     {
-        out << "Binary<" << BinaryType::names[type] << ">(" << left << ", " << right << ")";
+        out << "Binary<" << BinaryType::names[type] << ">(" << *left << ", " << *right << ")";
     }
 };
 
 class Conditional : public Statement {
-    Expression * condition;
-    Statement * ifTrue;
-    Statement * ifFalse;
+    std::shared_ptr<Expression> condition;
+    std::shared_ptr<Statement> ifTrue;
+    std::shared_ptr<Statement> ifFalse;
 
 public:
-    Conditional(Expression * e, Statement * ifTrue, Statement * ifFalse) : condition(e), ifTrue(ifTrue), ifFalse(ifFalse)
-    {
-        complete = condition && ifTrue && ifFalse;
-    }
-
-    ~Conditional()
-    {
-        if (condition) delete(condition);
-        if (ifTrue) delete(ifTrue);
-        if (ifFalse) delete(ifFalse);
-    }
+    Conditional(std::shared_ptr<Expression> e, std::shared_ptr<Statement> ifTrue, std::shared_ptr<Statement> ifFalse) : condition(e), ifTrue(ifTrue), ifFalse(ifFalse) { }
 
     virtual std::string exec(const Message & msg)
     {
-        if (! isComplete()) return std::string("");
-
         if (condition->eval(msg)) {
             return ifTrue->exec(msg);
         } else {
@@ -207,7 +171,7 @@ public:
 
     virtual void print(std::ostream & out) const
     {
-        out << "Conditional(" << condition << ", " << ifTrue << ", " << ifFalse << ")";
+        out << "Conditional(" << condition << ", " << *ifTrue << ", " << *ifFalse << ")";
     }
 };
 
@@ -225,24 +189,14 @@ public:
 
 private:
     Logical::Type type;
-    std::vector<Expression *> clauses;
+    std::vector<std::shared_ptr<Expression> > clauses;
 
 public:
-    Logical(Logical::Type t, std::vector<Expression *> & c) : type(t), clauses(c)
-    {
-        complete = true;
-    }
+    Logical(Logical::Type t, std::vector<std::shared_ptr<Expression> > & c) : type(t), clauses(c) { }
 
-    ~Logical()
-    {
-        for (std::vector<Expression *>::iterator it = clauses.begin(); it != clauses.end(); it++) {
-            delete *it;
-        }
-    }
-    
     virtual bool eval(const Message & msg)
     {
-        for (std::vector<Expression *>::iterator it = clauses.begin(); it != clauses.end(); it++) {
+        for (std::vector<std::shared_ptr<Expression> >::iterator it = clauses.begin(); it != clauses.end(); it++) {
             bool clauseValue = (**it).eval(msg);
 
             if (type == Logical::Type::AND) {
@@ -259,9 +213,8 @@ public:
     {
         out << "Logical<" << LogicalType::names[type] << ">(";
 
-        for (std::vector<Expression *>::const_iterator it = clauses.begin(); it != clauses.end(); it++) {
-            Expression * e = *it;
-            out << *e;
+        for (std::vector<std::shared_ptr<Expression> >::const_iterator it = clauses.begin(); it != clauses.end(); it++) {
+            out << (**it);
 
             if (it + 1 != clauses.end()) {
                 out << ", ";
@@ -274,14 +227,11 @@ public:
 
 class Production: public Statement {
     std::string service;
-    std::vector<Arg *> path;
-    std::vector<std::pair<std::string, Arg *> > params;
+    std::vector<std::shared_ptr<Arg> > path;
+    std::vector<std::pair<std::string, std::shared_ptr<Arg> > > params;
 
 public:
-    Production(const std::string & service, const std::vector<Arg *> & path, const std::vector<std::pair<std::string, Arg *> > & params) : service(service), path(path), params(params)
-    {
-        complete = true;
-    }
+    Production(const std::string & service, const std::vector<std::shared_ptr<Arg> > & path, const std::vector<std::pair<std::string, std::shared_ptr<Arg> > > & params) : service(service), path(path), params(params) { }
 
     virtual std::string exec(const Message & msg)
     {
@@ -290,7 +240,7 @@ public:
         out << service;
 
         if (path.size()) {
-            for (std::vector<Arg *>::iterator it = path.begin(); it != path.end(); it++) {
+            for (std::vector<std::shared_ptr<Arg> >::iterator it = path.begin(); it != path.end(); it++) {
                 out << "/" << (**it).getValue(msg);
             }
         }
@@ -298,7 +248,7 @@ public:
         if (params.size()) {
             out << "?";
 
-            for (std::vector<std::pair<std::string, Arg *> >::iterator it = params.begin(); it != params.end(); it++) {
+            for (std::vector<std::pair<std::string, std::shared_ptr<Arg> > >::iterator it = params.begin(); it != params.end(); it++) {
                 // TODO: add url encoding
                 
                 out << it->first << "=" << it->second->getValue(msg);
@@ -315,7 +265,7 @@ public:
     {
         out << "Production(" << service << ", PATH(";
 
-        for (std::vector<Arg *>::const_iterator it = path.begin(); it != path.end(); it++) {
+        for (std::vector<std::shared_ptr<Arg> >::const_iterator it = path.begin(); it != path.end(); it++) {
             out << **it;
 
             if (it + 1 != path.end()) {
@@ -325,7 +275,7 @@ public:
 
         out << "), PARAMS(";
 
-        for (std::vector<std::pair<std::string, Arg *> >::const_iterator it = params.begin(); it != params.end(); it++) {
+        for (std::vector<std::pair<std::string, std::shared_ptr<Arg> > >::const_iterator it = params.begin(); it != params.end(); it++) {
             out << it->first << "=" << *(it->second);
 
             if (it + 1 != params.end()) {

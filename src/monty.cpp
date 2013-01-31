@@ -1,5 +1,6 @@
 #include "ast.h"
 #include "message.h"
+#include "parse_error.h"
 #include "rule.h"
 
 #include <iostream>
@@ -81,9 +82,11 @@ int main(int argc, char ** argv)
         "}]"\
     );
 
-    Rule brokenrule(sbrokenrule);
+    try {
+        Rule brokenrule(sbrokenrule);
+    } catch (ParseError pe) {
+        cout << pe << endl;
+    }
 
-    cout << brokenrule << endl;
-                    
     return 0;
 }
