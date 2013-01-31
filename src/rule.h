@@ -2,7 +2,6 @@
 #define MONTY_RULE_H
 
 #include <string>
-
 #include "ast.h"
 #include "object.h"
 

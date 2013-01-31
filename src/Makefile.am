@@ -10,10 +10,11 @@ lib_LTLIBRARIES=\
 	libmonty.la
 
 libmonty_la_SOURCES=\
-	object.cpp\
+	ast.cpp\
 	message.cpp\
-	rule.cpp\
-	ast.cpp
+	object.cpp\
+	parser.cpp\
+	rule.cpp
 
 libmonty_la_LDFLAGS=\
 	-ljson
