@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <memory>
 
+#include "context.h"
 #include "message.h"
 #include "object.h"
 
@@ -19,6 +20,8 @@ class Base: public Object {
 
 public:
     virtual ~Base() {}
+
+    virtual llvm::Value * Codegen(Context & ctx) = 0;
 };
 
 class Statement: public Base {
@@ -60,6 +63,8 @@ public:
     {
         out << "VALUE(" << value << ")";
     }
+
+    virtual llvm::Value * Codegen(Context & ctx);
 };
 
 class Lookup: public Arg {
@@ -78,6 +83,7 @@ public:
         out << "LOOKUP(" << key << ")";
     }
 
+    virtual llvm::Value * Codegen(Context & ctx);
 };
 
 namespace BinaryType {
@@ -153,6 +159,8 @@ public:
     {
         out << "Binary<" << BinaryType::names[type] << ">(" << *left << ", " << *right << ")";
     }
+
+    virtual llvm::Value * Codegen(Context & ctx);
 };
 
 class Conditional : public Statement {
@@ -176,6 +184,8 @@ public:
     {
         out << "Conditional(" << condition << ", " << *ifTrue << ", " << *ifFalse << ")";
     }
+
+    virtual llvm::Value * Codegen(Context & ctx);
 };
 
 namespace LogicalType {
@@ -226,6 +236,8 @@ public:
 
         out << ")";
     }
+
+    virtual llvm::Value * Codegen(Context & ctx);
 };
 
 class Production: public Statement {
@@ -288,6 +300,8 @@ public:
 
         out << ")";
     }
+
+    virtual llvm::Value * Codegen(Context & ctx);
 };
 
 }

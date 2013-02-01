@@ -2,7 +2,8 @@ AM_CXXFLAGS= \
 	-Wall \
 	-Werror \
 	-std=c++0x \
-	-ggdb3
+	-ggdb3 \
+	$(LLVM_CPPFLAGS)
 
 bin_PROGRAMS = monty test_monty
 
@@ -11,12 +12,14 @@ lib_LTLIBRARIES=\
 
 libmonty_la_SOURCES=\
 	ast.cpp\
+	codegen.cpp\
 	message.cpp\
 	object.cpp\
 	parser.cpp\
 	rule.cpp
 
 libmonty_la_LDFLAGS=\
+	$(LLVM_LDADD)\
 	-ljson
 
 LDADD=\

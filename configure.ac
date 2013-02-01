@@ -7,6 +7,9 @@ AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([src/monty.cpp])
 AC_CONFIG_HEADERS([config.h])
 
+AC_SUBST(LLVM_CPPFLAGS, $(llvm-config --cppflags))
+AC_SUBST(LLVM_LDADD, $(llvm-config --ldflags --libs core jit native | tr '\n' ' '))
+
 AC_GNU_SOURCE
 
 # Checks for programs.
