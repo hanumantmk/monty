@@ -1,14 +1,48 @@
 #ifndef MONTY_PARSER_H
 #define MONTY_PARSER_H
 
-#include <stack>
+#include <vector>
 #include <json/json.h>
 #include "ast.h"
+#include <iostream>
 
 namespace Monty {
 
+class ParserNode: public Object {
+public:
+    enum Type {
+        CLASS,
+        ATTRIBUTE,
+        ARRAY,
+    };
+
+private:
+    enum Type type;
+    const char * str;
+    int index;
+
+public:
+    ParserNode(ParserNode::Type t, const char * s) : type(t), str(s) {}
+    ParserNode(ParserNode::Type t, int i) : type(t), index(i) {}
+
+    virtual void print(std::ostream & out) const
+    {
+        switch (type) {
+            case Type::CLASS:
+                out << "<" << str << ">.";
+                break;
+            case Type::ATTRIBUTE:
+                out << str;
+                break;
+            case Type::ARRAY:
+                out << "[" << index << "]";
+                break;
+        }
+    }
+};
+
 class Parser {
-    std::stack<std::string> path;
+    std::vector<ParserNode> path;
 
 public:
     Parser();
@@ -25,6 +59,10 @@ public:
     AST::Expression * parseExpression(json_object * obj);
     AST::Arg * parseArg(json_object * obj);
     AST::Statement * parseStatement(json_object * obj);
+
+private:
+    void throwError();
+    void throwError(const char * str);
 };
 
 }
