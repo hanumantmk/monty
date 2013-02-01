@@ -16,6 +16,9 @@ namespace Monty {
 namespace AST {
 
 class Base: public Object {
+
+public:
+    virtual ~Base() {}
 };
 
 class Statement: public Base {
@@ -23,7 +26,15 @@ class Statement: public Base {
 public:
     virtual ~Statement() {}
 
-    virtual std::string exec(const Message & msg) {return std::string("");}
+    virtual std::string exec(const Message & msg) = 0;
+};
+
+class Expression: public Base {
+
+public:
+    virtual ~Expression() {}
+
+    virtual bool eval(const Message & msg) = 0;
 };
 
 class Arg: public Base {
@@ -31,7 +42,7 @@ class Arg: public Base {
 public:
     virtual ~Arg() {}
 
-    virtual std::string getValue(const Message & msg) {return std::string("");}
+    virtual std::string getValue(const Message & msg) = 0;
 };
 
 class Value: public Arg {
@@ -67,14 +78,6 @@ public:
         out << "LOOKUP(" << key << ")";
     }
 
-};
-
-class Expression: public Base {
-
-public:
-    virtual ~Expression() {};
-
-    virtual bool eval(const Message & msg) {return true;}
 };
 
 namespace BinaryType {
